@@ -1,4 +1,4 @@
-# Qwen3-8B 로컬 설치 가이드
+# Qwen3 로컬 설치 가이드
 
 > **생성일:** 2026-09-07  
 > **대상 시스템:** Ubuntu 22.04 LTS | RTX 5090 24GB | 64GB RAM | 24 Cores
@@ -21,18 +21,103 @@
 
 ---
 
-## 2. Qwen3-8B란?
+## 2. Qwen3란?
 
-- **모델 크기:** 8.2B (82억) 파라미터
-- **컨텍스트 윈도우:** 32,768 토큰 (YaRN 확장 시 131,072 토큰)
+Qwen3는 Alibaba Qwen 팀이 개발한 오픈소스 대규모 언어 모델 패밀리입니다.  
+36조 개의 토큰으로 학습되었으며, 119개 언어를 지원합니다.
+
 - **라이선스:** Apache 2.0 (상업적 사용 가능)
-- **언어:** 119개 언어 지원, 한국어 포함
-- **특징:** Think/No-Think 하이브리드 추론 모드
-- **HuggingFace:** `Qwen/Qwen3-8B`
+- **특징:** Think/No-Think 하이브리드 추론 모드 (모든 모델 공통)
+- **컨텍스트:** 32K~128K 토큰 지원
 
 ---
 
-## 3. 설치 방법 (4가지 경로)
+## 3. Qwen3 전체 모델 라인업
+
+### 3.1 Dense (밀집) 모델
+
+| 모델 | 파라미터 수 | 컨텍스트 | Q4 VRAM | BF16 VRAM | Ollama 명령어 | 추천 용도 |
+|------|-------------|----------|---------|-----------|---------------|-----------|
+| **Qwen3-0.6B** | 0.6B | 32K | ~1GB | ~1.2GB | `ollama run qwen3:0.6b` | 엣지/IoT, 라즈베리파이 |
+| **Qwen3-1.7B** | 1.7B | 32K | ~1.5GB | ~3.4GB | `ollama run qwen3:1.7b` | 모바일, 빠른 프로토타입 |
+| **Qwen3-4B** | 4B | 128K | ~3GB | ~8GB | `ollama run qwen3:4b` | 소비자 GPU, 가벼운 에이전트 |
+| **Qwen3-8B** | 8.2B | 128K | ~5-6GB | ~16GB | `ollama run qwen3:8b` | 개발 워크스테이션 (추천) |
+| **Qwen3-14B** | 14B | 128K | ~10GB | ~28GB | `ollama run qwen3:14b` | 중급 서버, 고품질 추론 |
+| **Qwen3-32B** | 32.8B | 128K | ~20GB | ~64GB | `ollama run qwen3:32b` | 고성능 서버, 크리에이티브 |
+
+### 3.2 MoE (혼합 전문가) 모델
+
+| 모델 | 총 파라미터 | 활성 파라미터 | 컨텍스트 | Q4 VRAM | Ollama 명령어 | 추천 용도 |
+|------|-------------|---------------|----------|---------|---------------|-----------|
+| **Qwen3-30B-A3B** | 30.5B | ~3.3B | 128K | ~20GB | `ollama run qwen3:30b-a3b` | 빠른 추론, 30B급 품질 |
+| **Qwen3-235B-A22B** | 235B | ~22B | 128K | ~120GB+ | `ollama run qwen3:235b-a22b` | 오픈소스 플래그십 |
+
+### 3.3 2507 업데이트 모델 (2025년 7월)
+
+일정 크기에 대해 성능이 개선된 2507 버전이 출시되었습니다:
+
+| 모델 | 변형 | 특징 |
+|------|------|------|
+| Qwen3-4B-Thinking-2507 | Think 모드 특화 | AIME25에서 81.3점 (Qwen2.5-72B 수준) |
+| Qwen3-30B-A3B-2507 | MoE 개선版 | 더 정확한 추론 |
+| Qwen3-235B-A22B-2507 | 플래그십 개선版 | 벤치마크 전체 상향 |
+
+> **팁:** 2507 버전이 존재하는 모델은 반드시 2507 버전을 사용하세요.
+
+### 3.4 하드웨어별 추천 모델
+
+| GPU / 환경 | 추천 모델 | Q4 시 예상 속도 |
+|------------|-----------|-----------------|
+| **CPU only (16GB RAM)** | Qwen3-4B Q4 | 5-8 tok/s |
+| **GTX 1660 / 6GB VRAM** | Qwen3-1.7B | 30-45 tok/s |
+| **RTX 3060 12GB** | Qwen3-8B Q4 | 25-35 tok/s |
+| **RTX 3090 / 4080 16GB+** | Qwen3-14B Q4 | 20-30 tok/s |
+| **RTX 4090 / 5090 24GB** | Qwen3-32B Q4 또는 Qwen3-8B BF16 | 15-25 tok/s / 150+ tok/s |
+| **A100 40GB** | Qwen3-30B-A3B BF16 | 40-60 tok/s |
+| **4x A100 80GB / H100** | Qwen3-235B-A22B | 10-20 tok/s |
+
+### 3.5 RTX 5090 24GB에서 실행 가능한 모델
+
+| 모델 | 양자화 | VRAM 사용 | 예상 성능 | 추천도 |
+|------|--------|-----------|-----------|--------|
+| Qwen3-8B | BF16 (전정밀도) | ~16GB | ~150-180 tok/s | ⭐⭐⭐ **최고 추천** |
+| Qwen3-8B | Q4_K_M | ~5-6GB | ~100-130 tok/s | ⭐⭐ |
+| Qwen3-14B | BF16 | ~28GB | 메모리 초과 | ❌ |
+| Qwen3-14B | Q4_K_M | ~10GB | ~50-70 tok/s | ⭐⭐⭐ **추천** |
+| Qwen3-32B | Q4_K_M | ~20GB | ~25-35 tok/s | ⭐⭐ 가능 |
+| Qwen3-30B-A3B | Q4_K_M | ~20GB | ~30-45 tok/s | ⭐⭐ 가능 |
+
+> **RTX 5090 24GB에서는 Qwen3-8B를 BF16으로 실행하는 것이 최고의 선택입니다.**  
+> 더 높은 품질이 필요하면 Qwen3-14B Q4를, 더 빠른 속도가 필요하면 Qwen3-4B BF16을 고려하세요.
+
+### 3.6 모델별 벤치마크 비교
+
+| 모델 | MMLU-Redux | MATH-500 | Think 모드 품질 |
+|------|------------|----------|-----------------|
+| Qwen3-4B | 83.7 | 97.0 | 양호 |
+| Qwen3-8B | 84.9 | 97.4 | 우수 |
+| Qwen3-14B | 86.7 | 97.4 | 매우 우수 |
+| Qwen3-32B | 87.8 | 97.4 | 최고 |
+| Qwen3-235B-A22B | - | - | 플래그십 (DeepSeek-R1 상회) |
+
+---
+
+## 4. Qwen3 공통 기능
+
+모든 Qwen3 모델(0.6B~235B)에 공통으로 적용되는 기능:
+
+| 기능 | 0.6B / 1.7B | 4B~32B Dense | 30B-A3B / 235B-A22B MoE |
+|------|-------------|--------------|-------------------------|
+| Think 모드 | ✅ | ✅ | ✅ |
+| 도구 호출 (Tool Calling) | ✅ | ✅ | ✅ |
+| 컨텍스트 윈도우 | 32K | 128K | 128K |
+| 언어 지원 | 119개 | 119개 | 119개 |
+| JSON/구조화된 출력 | ✅ | ✅ | ✅ |
+| 라이선스 | Apache 2.0 | Apache 2.0 | Apache 2.0 |
+
+---
+
+## 5. 설치 방법 (4가지 경로)
 
 ### 방법 1: Ollama (가장 간단, 5분)
 
@@ -196,7 +281,7 @@ huggingface-cli download Qwen/Qwen3-8B-GGUF --include "*.gguf" --local-dir ~/Des
 
 ---
 
-## 4. 설치 방법 비교
+## 6. 설치 방법 비교
 
 | 항목 | Ollama | vLLM | Transformers | llama.cpp |
 |------|--------|------|--------------|-----------|
@@ -210,7 +295,7 @@ huggingface-cli download Qwen/Qwen3-8B-GGUF --include "*.gguf" --local-dir ~/Des
 
 ---
 
-## 5. 추천 양자화 (Quantization) 가이드
+## 7. 추천 양자화 (Quantization) 가이드
 
 RTX 5090 24GB 기준:
 
@@ -226,7 +311,7 @@ RTX 5090 24GB 기준:
 
 ---
 
-## 6. Think 모드 (추론 모드) 사용법
+## 8. Think 모드 (추론 모드) 사용법
 
 Qwen3-8B는 추론(Chain-of-Thought) 모드를 지원합니다:
 
@@ -258,9 +343,9 @@ messages = [
 
 ---
 
-## 7. 검증 및 테스트
+## 9. 검증 및 테스트
 
-### 7.1 기본 동작 확인
+### 9.1 기본 동작 확인
 
 ```bash
 # Ollama 설치 확인
@@ -274,7 +359,7 @@ curl http://localhost:8000/health
 watch -n 1 nvidia-smi
 ```
 
-### 7.2 프롬프트 테스트
+### 9.2 프롬프트 테스트
 
 ```bash
 # Ollama 테스트
@@ -295,7 +380,7 @@ curl -X POST http://localhost:8000/v1/chat/completions \
   }'
 ```
 
-### 7.3 성능 벤치마크
+### 9.3 성능 벤치마크
 
 ```bash
 # RTX 5090에서 예상 성능 (참고용)
@@ -313,9 +398,9 @@ python -m vllm.entrypoints.benchmark \
 
 ---
 
-## 8. 문제 해결 (트러블슈팅)
+## 10. 문제 해결 (트러블슈팅)
 
-### 8.1 CUDA 관련 오류
+### 10.1 CUDA 관련 오류
 
 ```bash
 # CUDA 버전 확인
@@ -326,7 +411,7 @@ nvidia-smi
 python3 -c "import torch; print(torch.cuda.is_available()); print(torch.version.cuda)"
 ```
 
-### 8.2 Ollama 연결 오류
+### 10.2 Ollama 연결 오류
 
 ```bash
 # Ollama 서비스 상태 확인
@@ -339,7 +424,7 @@ journalctl -u ollama -f
 ollama serve &
 ```
 
-### 8.3 GPU 메모리 부족
+### 10.3 GPU 메모리 부족
 
 ```bash
 # 현재 GPU 메모리 사용량 확인
@@ -350,7 +435,7 @@ nvidia-smi
 # Q4_K_M -> Q4_K_S 또는 Q3_K_M
 ```
 
-### 8.4 모델 다운로드 실패
+### 10.4 모델 다운로드 실패
 
 ```bash
 # HuggingFace 캐시 확인
@@ -363,7 +448,7 @@ huggingface-cli download Qwen/Qwen3-8B
 
 ---
 
-## 9. 유용한 명령어 모음
+## 11. 유용한 명령어 모음
 
 ```bash
 # === Ollama ===
@@ -383,20 +468,20 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv  # 메모리만
 
 ---
 
-## 10. 디렉토리 구조 (권장)
+## 12. 디렉토리 구조 (권장)
 
 ```
 /home/gotree94/Desktop/
-├── Qwen3-8B_설치가이드.md          ← 이 파일
-├── qwen3-env/                      ← Python 가상환경 (방법 2, 3용)
-├── llama.cpp/                      ← llama.cpp 소스 (방법 4용)
-├── qwen3-8b-gguf/                  ← GGUF 모델 파일 (방법 4용)
-└── test_qwen3.py                   ← 테스트 스크립트 (방법 3용)
+├── README.md                         ← 이 파일
+├── qwen3-env/                        ← Python 가상환경 (방법 2, 3용)
+├── llama.cpp/                        ← llama.cpp 소스 (방법 4용)
+├── qwen3-8b-gguf/                    ← GGUF 모델 파일 (방법 4용)
+└── test_qwen3.py                     ← 테스트 스크립트 (방법 3용)
 ```
 
 ---
 
-## 11. 빠른 시작 (3줄 요약)
+## 13. 빠른 시작 (3줄 요약)
 
 ```bash
 # 가장 빠른 시작 (Ollama)

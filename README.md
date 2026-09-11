@@ -281,6 +281,200 @@ huggingface-cli download Qwen/Qwen3-8B-GGUF --include "*.gguf" --local-dir ~/Des
 
 ---
 
+### 5.1 빠른 다운로드 방법 (25Mbps 제한적 네트워크 환경)
+
+> **인터넷 속도 25Mbps = 약 3.12 MB/s 기준**
+
+#### 다운로드 소요 시간 비교
+
+| 방법 | 파일 크기 | 소요 시간 | 안정성 | 중단 후 재개 |
+|------|-----------|-----------|--------|-------------|
+| Ollama (단일 연결) | 5.2GB | 약 28분 | ⭐⭐⭐ | ✅ 자동 |
+| **aria2 (16 연결)** | **5.0GB** | **약 3-5분** | **⭐⭐⭐** | **✅ 자동** |
+| wget (단일 연결) | 5.0GB | 약 28분 | ⭐⭐ | 수동 |
+| vLLM BF16 (전체 모델) | 16.3GB | 약 1시간 29분 | ⭐⭐ | 모델이 너무 큼 |
+
+> **결론: aria2 + HuggingFace 다중 연결 다운로드가 5~8배 빠름**
+
+####Step 1: aria2 설치
+
+```bash
+sudo apt update && sudo apt install -y aria2
+```
+
+#### Step 2: GGUF 모델 다운로드 (Q4_K_M, ~5GB)
+
+**방법 A: HuggingFace 직접 다운로드 (추천)**
+```bash
+mkdir -p ~/Desktop/qwen3-8b-gguf
+
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-8b-gguf \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+```
+
+**방법 B: HuggingFace 미러 사이트 (아시아에서 더 빠름)**
+```bash
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-8b-gguf \
+  "https://hf-mirror.com/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+```
+
+**방법 C: BF16 전체 모델 다운로드 (~16GB, 약 1시간 29분)**
+```bash
+mkdir -p ~/Desktop/qwen3-8b-model
+
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-8b-model \
+  "https://huggingface.co/Qwen/Qwen3-8B/resolve/main/model-00001-of-00004.safetensors"
+```
+
+#### aria2 옵션 설명
+
+| 옵션 | 의미 |
+|------|------|
+| `-x 16` | 최대 16개 연결 동시 다운로드 |
+| `-s 16` | 파일을 16개 조각으로 분할 |
+| `-k 1M` | 조각당 1MB 캐시 (재시작 시 활용) |
+| `-d <경로>` | 저장 디렉토리 지정 |
+
+#### 다운로드 후 llama.cpp로 실행
+
+```bash
+# llama.cpp 빌드 (이미 있다면 건너뛰기)
+cd ~/Desktop
+git clone https://github.com/ggerganov/llama.cpp.git
+cd llama.cpp
+cmake -B build -DGGML_CUDA=ON
+cmake --build build --config Release -j$(nproc)
+
+# 다운로드 받은 GGUF로 실행
+./build/bin/llama-cli \
+  -m ~/Desktop/qwen3-8b-gguf/qwen3-8b-q4_k_m.gguf \
+  -p "안녕하세요!" \
+  -n 256 \
+  -ngl 99 \
+  --temp 0.7 \
+  --top-p 0.9
+```
+
+#### 다운로드 진행 상황 확인
+
+```bash
+# 다운로드 중 파일 크기 확인
+ls -lh ~/Desktop/qwen3-8b-gguf/
+
+# 다운로드 프로세스 확인
+ps aux | grep aria2c
+```
+
+---
+
+### 5.2 윈도우 다운로드 방법
+
+> **Windows 10/11 환경에서 Qwen3-8B 다운로드**
+
+#### 방법 A: Ollama (가장 간단)
+
+```powershell
+# 1) Ollama 설치
+# https://ollama.com/download/windows 에서 설치 파일 다운로드
+# 또는 PowerShell에서:
+winget install Ollama.Ollama
+
+# 2) 터미널 재시작 후 실행
+ollama run qwen3:8b
+```
+
+#### 방법 B: aria2로 빠른 다운로드 (16 연결)
+
+```powershell
+# 1) aria2 설치 (winget 사용)
+winget install aria2.aria2
+
+# 또는 Scoop 사용:
+scoop install aria2
+
+# 또는 수동 다운로드:
+# https://github.com/aria2/aria2/releases 에서 aria2-*-win-64bit-build1.zip 다운로드
+# 압축 해제 후 C:\Program Files\aria2 에 복사
+# 시스템 PATH에 추가
+
+# 2) 설치 확인
+aria2c --version
+
+# 3) 다운로드 (PowerShell)
+mkdir C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf
+
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf `
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+```
+
+#### 방법 C: HuggingFace CLI (Python 필요)
+
+```powershell
+# 1) Python 설치 (이미 있다면 건너뛰기)
+winget install Python.Python.3.11
+
+# 2) HuggingFace CLI 설치
+pip install huggingface-hub
+
+# 3) 모델 다운로드 (이어받기 지원)
+huggingface-cli download Qwen/Qwen3-8B --local-dir C:\Users\$env:USERNAME\Desktop\qwen3-8b-model
+```
+
+#### 방법 D: PowerShell Invoke-WebRequest (기본 도구)
+
+```powershell
+# PowerShell 5.0+ 내장 다운로드 (단일 연결, 느림)
+$url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+$output = "C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\qwen3-8b-q4_k_m.gguf"
+
+Invoke-WebRequest -Uri $url -OutFile $output
+```
+
+#### 윈도우에서 Ollama 모델 위치 확인
+
+```powershell
+# 설치된 모델 목록
+ollama list
+
+# 모델 파일 위치 (기본값)
+# C:\Users\<사용자名>\.ollama\models\
+
+# 디스크 사용량 확인
+du -sh C:\Users\$env:USERNAME\.ollama\models\
+```
+
+#### 윈도우에서 llama.cpp 실행
+
+```powershell
+# 1) llama.cpp 다운로드 (이미 빌드된 바이너리)
+# https://github.com/ggerganov/llama.cpp/releases 에서
+# llama.cpp-bin-windows-x64.zip 다운로드
+
+# 2) 압축 해제 후 실행
+.\llama-cli.exe -m C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\qwen3-8b-q4_k_m.gguf -p "안녕하세요!" -n 256 -ngl 99
+
+# 3) API 서버로 실행
+.\llama-server.exe -m C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\qwen3-8b-q4_k_m.gguf --host 0.0.0.0 --port 8080 -ngl 99
+```
+
+#### 윈도우 vs 리눅스 다운로드 속도 비교
+
+| 환경 | 방법 | 5GB 다운로드 시간 |
+|------|------|-------------------|
+| Windows | Ollama (단일 연결) | 약 28분 |
+| Windows | **aria2 (16 연결)** | **약 3-5분** |
+| Windows | HuggingFace CLI | 약 28분 |
+| Linux | Ollama (단일 연결) | 약 28분 |
+| Linux | **aria2 (16 연결)** | **약 3-5분** |
+
+> **팁:** 윈도우에서도 aria2가 가장 빠르습니다. `winget install aria2.aria2`로 간편 설치 가능합니다.
+
+---
+
 ## 6. 설치 방법 비교
 
 | 항목 | Ollama | vLLM | Transformers | llama.cpp |
@@ -441,9 +635,19 @@ nvidia-smi
 # HuggingFace 캐시 확인
 ls ~/.cache/huggingface/hub/
 
-# 수동 다운로드
+# 방법 1: HuggingFace CLI로 재다운로드 (이어받기 지원)
 pip install huggingface-hub
 huggingface-cli download Qwen/Qwen3-8B
+
+# 방법 2: aria2로 빠른 재다운로드 (16 연결)
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-8b-gguf \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+
+# 방법 3: 미러 사이트 시도
+aria2c -x 16 -s 16 \
+  -d ~/Desktop/qwen3-8b-gguf \
+  "https://hf-mirror.com/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
 ```
 
 ---
@@ -475,7 +679,8 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv  # 메모리만
 ├── README.md                         ← 이 파일
 ├── qwen3-env/                        ← Python 가상환경 (방법 2, 3용)
 ├── llama.cpp/                        ← llama.cpp 소스 (방법 4용)
-├── qwen3-8b-gguf/                    ← GGUF 모델 파일 (방법 4용)
+├── qwen3-8b-gguf/                    ← GGUF 모델 파일 (방법 4용, aria2 다운로드)
+├── qwen3-8b-model/                   ← BF16 전체 모델 (선택사항)
 └── test_qwen3.py                     ← 테스트 스크립트 (방법 3용)
 ```
 
@@ -483,14 +688,41 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv  # 메모리만
 
 ## 13. 빠른 시작 (3줄 요약)
 
+### 리눅스
+
 ```bash
-# 가장 빠른 시작 (Ollama)
+# 방법 A: Ollama (가장 간단)
 curl -fsSL https://ollama.com/install.sh | sh
 ollama run qwen3:8b
 ```
 
 ```bash
-# 프로덕션 API 서버 (vLLM)
+# 방법 B: aria2 빠른 다운로드 (25Mbps 네트워크 추천)
+sudo apt install -y aria2
+mkdir -p ~/Desktop/qwen3-8b-gguf
+aria2c -x 16 -s 16 -d ~/Desktop/qwen3-8b-gguf \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+```
+
+### 윈도우
+
+```powershell
+# 방법 A: Ollama (가장 간단)
+winget install Ollama.Ollama
+ollama run qwen3:8b
+```
+
+```powershell
+# 방법 B: aria2 빠른 다운로드 (16 연결)
+winget install aria2.aria2
+mkdir C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf `
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+```
+
+```bash
+# 방법 C: 프로덕션 API 서버 (vLLM, 리눅스만)
 pip install "vllm>=0.9.0"
 vllm serve Qwen/Qwen3-8B
 ```

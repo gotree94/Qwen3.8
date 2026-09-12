@@ -1,7 +1,29 @@
 # Qwen3 로컬 설치 가이드
 
 > **생성일:** 2026-09-07  
+> **최종 업데이트:** 2026-09-12  
 > **대상 시스템:** Ubuntu 22.04 LTS | RTX 5090 24GB | 64GB RAM | 24 Cores
+
+---
+
+## 목차
+
+| 섹션 | 내용 |
+|------|------|
+| [1. 시스템 환경 요약](#1-시스템-환경-요약) | 하드웨어/소프트웨어 확인 |
+| [2. Qwen3란?](#2-qwen3란) | 모델 소개 |
+| [3. Qwen3 전체 모델 라인업](#3-qwen3-전체-모델-라인업) | 0.6B~235B 전체 목록 |
+| [4. Qwen3 공통 기능](#4-qwen3-공통-기능) | Think, 도구호출 등 |
+| [5. 설치 방법](#5-설치-방법-4가지-경로) | Ollama, vLLM, Transformers, llama.cpp |
+| [6. 설치 방법 비교](#6-설치-방법-비교) | 4가지 방법 비교표 |
+| [7. 추천 양자화 가이드](#7-추천-양자화-quantization-가이드) | BF16~Q4 선택 |
+| [8. Think 모드](#8-think-모드-추론-모드-사용법) | 추론 모드 활용 |
+| [9. 검증 및 테스트](#9-검증-및-테스트) | 동작 확인 |
+| [10. 문제 해결](#10-문제-해결-트러블슈팅) | DNS, 404, 속도 문제 |
+| [11. 유용한 명령어](#11-유용한-명령어-모음) | Ollama/vLLM/GPU |
+| [12. 전체 모델 다운로드](#12-qwen3-전체-모델-다운로드) | 7개 모델 53GB |
+| [13. 디렉토리 구조](#13-디렉토리-구조-권장) | 폴더 배치 |
+| [14. 빠른 시작](#14-빠른-시작) | 3줄 요약 |
 
 ---
 
@@ -310,14 +332,16 @@ mkdir -p ~/Desktop/qwen3-8b-gguf
 
 aria2c -x 16 -s 16 -k 1M \
   -d ~/Desktop/qwen3-8b-gguf \
-  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+  -o "Qwen3-8B-Q4_K_M.gguf" \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 ```
 
 **방법 B: HuggingFace 미러 사이트 (아시아에서 더 빠름)**
 ```bash
 aria2c -x 16 -s 16 -k 1M \
   -d ~/Desktop/qwen3-8b-gguf \
-  "https://hf-mirror.com/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+  -o "Qwen3-8B-Q4_K_M.gguf" \
+  "https://hf-mirror.com/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 ```
 
 **방법 C: BF16 전체 모델 다운로드 (~16GB, 약 1시간 29분)**
@@ -326,6 +350,7 @@ mkdir -p ~/Desktop/qwen3-8b-model
 
 aria2c -x 16 -s 16 -k 1M \
   -d ~/Desktop/qwen3-8b-model \
+  -o "Qwen3-8B-00001-of-00004.safetensors" \
   "https://huggingface.co/Qwen/Qwen3-8B/resolve/main/model-00001-of-00004.safetensors"
 ```
 
@@ -350,7 +375,7 @@ cmake --build build --config Release -j$(nproc)
 
 # 다운로드 받은 GGUF로 실행
 ./build/bin/llama-cli \
-  -m ~/Desktop/qwen3-8b-gguf/qwen3-8b-q4_k_m.gguf \
+  -m ~/Desktop/qwen3-8b-gguf/Qwen3-8B-Q4_K_M.gguf \
   -p "안녕하세요!" \
   -n 256 \
   -ngl 99 \
@@ -408,7 +433,8 @@ mkdir C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf
 
 aria2c -x 16 -s 16 -k 1M `
   -d C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf `
-  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+  -o "Qwen3-8B-Q4_K_M.gguf" `
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 ```
 
 #### 방법 C: HuggingFace CLI (Python 필요)
@@ -428,8 +454,8 @@ huggingface-cli download Qwen/Qwen3-8B --local-dir C:\Users\$env:USERNAME\Deskto
 
 ```powershell
 # PowerShell 5.0+ 내장 다운로드 (단일 연결, 느림)
-$url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
-$output = "C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\qwen3-8b-q4_k_m.gguf"
+$url = "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+$output = "C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\Qwen3-8B-Q4_K_M.gguf"
 
 Invoke-WebRequest -Uri $url -OutFile $output
 ```
@@ -455,10 +481,10 @@ du -sh C:\Users\$env:USERNAME\.ollama\models\
 # llama.cpp-bin-windows-x64.zip 다운로드
 
 # 2) 압축 해제 후 실행
-.\llama-cli.exe -m C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\qwen3-8b-q4_k_m.gguf -p "안녕하세요!" -n 256 -ngl 99
+.\llama-cli.exe -m C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\Qwen3-8B-Q4_K_M.gguf -p "안녕하세요!" -n 256 -ngl 99
 
 # 3) API 서버로 실행
-.\llama-server.exe -m C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\qwen3-8b-q4_k_m.gguf --host 0.0.0.0 --port 8080 -ngl 99
+.\llama-server.exe -m C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf\Qwen3-8B-Q4_K_M.gguf --host 0.0.0.0 --port 8080 -ngl 99
 ```
 
 #### 윈도우 vs 리눅스 다운로드 속도 비교
@@ -594,7 +620,57 @@ python -m vllm.entrypoints.benchmark \
 
 ## 10. 문제 해결 (트러블슈팅)
 
-### 10.1 CUDA 관련 오류
+### 10.1 DNS 오류 (가장 흔한 문제)
+
+```bash
+# 증상: dial tcp: lookup registry.ollama.ai: i/o timeout
+# 원인: 로컬 DNS 서버(127.0.0.53) 미응답
+
+# 해결 방법 1: Google DNS 추가
+sudo bash -c 'echo "nameserver 8.8.8.8" > /etc/resolv.conf'
+
+# 해결 방법 2: systemd-resolved 재시작
+sudo systemctl restart systemd-resolved
+
+# 해결 방법 3: 영구적 DNS 설정
+sudo bash -c 'echo "nameserver 8.8.8.8
+nameserver 8.8.4.4" > /etc/resolv.conf'
+
+# DNS 테스트
+nslookup huggingface.co 8.8.8.8
+nslookup registry.ollama.ai 8.8.8.8
+```
+
+### 10.2 aria2 "Resource not found" 오류 (404)
+
+```bash
+# 원인: 파일명 대소문자 오류
+# 잘못된 예: qwen3-8b-q4_k_m.gguf
+# 올바른 예: Qwen3-8B-Q4_K_M.gguf
+
+# 파일명 확인 방법
+curl -s "https://huggingface.co/api/models/Qwen/Qwen3-8B-GGUF/tree/main" | \
+  python3 -c "import sys,json; [print(f['path']) for f in json.load(sys.stdin) if 'Q4' in f['path']]"
+```
+
+### 10.3 다운로드 속도 느림 (30KB/s 이하)
+
+```bash
+# 원인: 미국 CDN으로 리다이렉트됨
+#해결: 미러 사이트 사용 또는 직접 다운로드
+
+# 방법 1: 미러 사이트
+aria2c -x 16 -s 16 -d ~/Desktop/qwen3-8b-gguf \
+  "https://hf-mirror.com/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+
+# 방법 2: aria2로 16 연결 사용 (기존 다운로드 이어받기)
+aria2c -x 16 -s 16 -k 1M -c \
+  -d ~/Desktop/qwen3-8b-gguf \
+  -o "Qwen3-8B-Q4_K_M.gguf" \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+```
+
+### 10.4 CUDA 관련 오류
 
 ```bash
 # CUDA 버전 확인
@@ -605,7 +681,7 @@ nvidia-smi
 python3 -c "import torch; print(torch.cuda.is_available()); print(torch.version.cuda)"
 ```
 
-### 10.2 Ollama 연결 오류
+### 10.5 Ollama 연결 오류
 
 ```bash
 # Ollama 서비스 상태 확인
@@ -618,7 +694,7 @@ journalctl -u ollama -f
 ollama serve &
 ```
 
-### 10.3 GPU 메모리 부족
+### 10.6 GPU 메모리 부족
 
 ```bash
 # 현재 GPU 메모리 사용량 확인
@@ -629,7 +705,19 @@ nvidia-smi
 # Q4_K_M -> Q4_K_S 또는 Q3_K_M
 ```
 
-### 10.4 모델 다운로드 실패
+### 10.7 모델 다운로드 실패
+
+```bash
+# DNS 오류 해결 (Ollama, aria2 모두 적용)
+# 로컬 DNS 서버가 응답하지 않을 때 Google DNS 사용
+sudo bash -c 'echo "nameserver 8.8.8.8" > /etc/resolv.conf'
+
+# 또는 systemd-resolved 재시작
+sudo systemctl restart systemd-resolved
+
+# DNS 테스트
+nslookup huggingface.co 8.8.8.8
+```
 
 ```bash
 # HuggingFace 캐시 확인
@@ -640,14 +728,16 @@ pip install huggingface-hub
 huggingface-cli download Qwen/Qwen3-8B
 
 # 방법 2: aria2로 빠른 재다운로드 (16 연결)
+# 파일명은 반드시 대소문자 구분: Qwen3-8B-Q4_K_M.gguf
 aria2c -x 16 -s 16 -k 1M \
   -d ~/Desktop/qwen3-8b-gguf \
-  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+  -o "Qwen3-8B-Q4_K_M.gguf" \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 
 # 방법 3: 미러 사이트 시도
 aria2c -x 16 -s 16 \
   -d ~/Desktop/qwen3-8b-gguf \
-  "https://hf-mirror.com/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+  "https://hf-mirror.com/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 ```
 
 ---
@@ -672,21 +762,173 @@ nvidia-smi --query-gpu=memory.used,memory.total --format=csv  # 메모리만
 
 ---
 
-## 12. 디렉토리 구조 (권장)
+## 12. Qwen3 전체 모델 다운로드
 
+### 12.1 전체 모델 목록 및 크기 (25Mbps 기준)
+
+| 모델 | 파일명 | 크기 | 예상 시간 |
+|------|--------|------|-----------|
+| Qwen3-0.6B | Qwen3-0.6B-Q8_0.gguf | 0.60GB | 약 3분 |
+| Qwen3-1.7B | Qwen3-1.7B-Q8_0.gguf | 1.71GB | 약 9분 |
+| Qwen3-4B | Qwen3-4B-Q4_K_M.gguf | 2.33GB | 약 13분 |
+| **Qwen3-8B** | **Qwen3-8B-Q4_K_M.gguf** | **4.68GB** | **약 26분** |
+| Qwen3-14B | Qwen3-14B-Q4_K_M.gguf | 8.38GB | 약 46분 |
+| Qwen3-32B | Qwen3-32B-Q4_K_M.gguf | 18.40GB | 약 100분 |
+| Qwen3-30B-A3B | Qwen3-30B-A3B-Q4_K_M.gguf | 17.28GB | 약 94분 |
+| **합계** | | **53.38GB** | **약 4.9시간** |
+
+> **참고:** Qwen3-0.6B, 1.7B는 Q4_K_M 양자화가 없어 Q8_0으로 다운로드됩니다.
+
+### 12.2 자동 다운로드 스크립트
+
+```bash
+# 스크립트 실행 (전체 모델 자동 다운로드)
+cd ~/Desktop
+chmod +x download_all_qwen3.sh
+./download_all_qwen3.sh
 ```
-/home/gotree94/Desktop/
-├── README.md                         ← 이 파일
-├── qwen3-env/                        ← Python 가상환경 (방법 2, 3용)
-├── llama.cpp/                        ← llama.cpp 소스 (방법 4용)
-├── qwen3-8b-gguf/                    ← GGUF 모델 파일 (방법 4용, aria2 다운로드)
-├── qwen3-8b-model/                   ← BF16 전체 모델 (선택사항)
-└── test_qwen3.py                     ← 테스트 스크립트 (방법 3용)
+
+### 12.3 개별 모델 다운로드
+
+```bash
+# 저장 디렉토리 생성
+mkdir -p ~/Desktop/qwen3-all-models
+
+# Qwen3-0.6B
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-all-models \
+  "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf"
+
+# Qwen3-1.7B
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-all-models \
+  "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/main/Qwen3-1.7B-Q8_0.gguf"
+
+# Qwen3-4B
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-all-models \
+  "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf"
+
+# Qwen3-8B (이미 다운로드된 경우 건너뛰기)
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-all-models \
+  -o "Qwen3-8B-Q4_K_M.gguf" \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+
+# Qwen3-14B
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-all-models \
+  "https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf"
+
+# Qwen3-32B
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-all-models \
+  "https://huggingface.co/Qwen/Qwen3-32B-GGUF/resolve/main/Qwen3-32B-Q4_K_M.gguf"
+
+# Qwen3-30B-A3B (MoE)
+aria2c -x 16 -s 16 -k 1M \
+  -d ~/Desktop/qwen3-all-models \
+  "https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF/resolve/main/Qwen3-30B-A3B-Q4_K_M.gguf"
+```
+
+### 12.4 윈도우 전체 다운로드
+
+```powershell
+# PowerShell에서 실행
+mkdir C:\Users\$env:USERNAME\Desktop\qwen3-all-models
+
+# Qwen3-0.6B
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-all-models `
+  "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf"
+
+# Qwen3-4B
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-all-models `
+  "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf"
+
+# Qwen3-8B
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-all-models `
+  -o "Qwen3-8B-Q4_K_M.gguf" `
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+
+# Qwen3-14B
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-all-models `
+  "https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/main/Qwen3-14B-Q4_K_M.gguf"
+
+# Qwen3-32B
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-all-models `
+  "https://huggingface.co/Qwen/Qwen3-32B-GGUF/resolve/main/Qwen3-32B-Q4_K_M.gguf"
+
+# Qwen3-30B-A3B
+aria2c -x 16 -s 16 -k 1M `
+  -d C:\Users\$env:USERNAME\Desktop\qwen3-all-models `
+  "https://huggingface.co/Qwen/Qwen3-30B-A3B-GGUF/resolve/main/Qwen3-30B-A3B-Q4_K_M.gguf"
+```
+
+### 12.5 다운로드 확인
+
+```bash
+# 파일 목록 확인
+ls -lh ~/Desktop/qwen3-all-models/
+
+# 총 사용량 확인
+du -sh ~/Desktop/qwen3-all-models/
+
+# 파일별 크기 검증
+for f in ~/Desktop/qwen3-all-models/*.gguf; do
+  echo "$(basename $f): $(du -h "$f" | cut -f1)"
+done
+```
+
+### 12.6 다운로드 받은 모델로 llama.cpp 실행
+
+```bash
+# 모델별 실행 예시
+./build/bin/llama-cli \
+  -m ~/Desktop/qwen3-all-models/Qwen3-14B-Q4_K_M.gguf \
+  -p "안녕하세요!" \
+  -n 256 \
+  -ngl 99 \
+  --temp 0.7 \
+  --top-p 0.9
+
+# API 서버로 실행 (포트 지정 가능)
+./build/bin/llama-server \
+  -m ~/Desktop/qwen3-all-models/Qwen3-32B-Q4_K_M.gguf \
+  --host 0.0.0.0 --port 8080 \
+  -ngl 99 \
+  -c 32768
 ```
 
 ---
 
-## 13. 빠른 시작 (3줄 요약)
+## 13. 디렉토리 구조 (권장)
+
+```
+/home/gotree94/Desktop/
+├── README.md                          ← 이 파일
+├── download_all_qwen3.sh              ← 전체 다운로드 스크립트
+├── qwen3-env/                         ← Python 가상환경 (방법 2, 3용)
+├── llama.cpp/                         ← llama.cpp 소스 (방법 4용)
+├── qwen3-8b-gguf/                     ← 개별 GGUF (방법 4용)
+├── qwen3-all-models/                  ← 전체 모델 GGUF
+│   ├── Qwen3-0.6B-Q8_0.gguf          (0.60GB)
+│   ├── Qwen3-1.7B-Q8_0.gguf          (1.71GB)
+│   ├── Qwen3-4B-Q4_K_M.gguf          (2.33GB)
+│   ├── Qwen3-8B-Q4_K_M.gguf          (4.68GB)
+│   ├── Qwen3-14B-Q4_K_M.gguf         (8.38GB)
+│   ├── Qwen3-32B-Q4_K_M.gguf         (18.40GB)
+│   └── Qwen3-30B-A3B-Q4_K_M.gguf     (17.28GB)
+└── test_qwen3.py                      ← 테스트 스크립트 (방법 3용)
+```
+
+---
+
+## 14. 빠른 시작
 
 ### 리눅스
 
@@ -701,7 +943,8 @@ ollama run qwen3:8b
 sudo apt install -y aria2
 mkdir -p ~/Desktop/qwen3-8b-gguf
 aria2c -x 16 -s 16 -d ~/Desktop/qwen3-8b-gguf \
-  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+  -o "Qwen3-8B-Q4_K_M.gguf" \
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 ```
 
 ### 윈도우
@@ -718,7 +961,8 @@ winget install aria2.aria2
 mkdir C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf
 aria2c -x 16 -s 16 -k 1M `
   -d C:\Users\$env:USERNAME\Desktop\qwen3-8b-gguf `
-  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/qwen3-8b-q4_k_m.gguf"
+  -o "Qwen3-8B-Q4_K_M.gguf" `
+  "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
 ```
 
 ```bash

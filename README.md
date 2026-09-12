@@ -21,9 +21,10 @@
 | [9. 검증 및 테스트](#9-검증-및-테스트) | 동작 확인 |
 | [10. 문제 해결](#10-문제-해결-트러블슈팅) | DNS, 404, 속도 문제 |
 | [11. 유용한 명령어](#11-유용한-명령어-모음) | Ollama/vLLM/GPU |
-| [12. 전체 모델 다운로드](#12-qwen3-전체-모델-다운로드) | 7개 모델 53GB |
-| [13. 디렉토리 구조](#13-디렉토리-구조-권장) | 폴더 배치 |
-| [14. 빠른 시작](#14-빠른-시작) | 3줄 요약 |
+| [12. Qwen3 전체 모델 다운로드](#12-qwen3-전체-모델-다운로드) | 7개 모델 53GB |
+| [13. 추가 모델 다운로드 스크립트](#13-추가-모델-다운로드-스크립트) | 한국 LLM, 범용 LLM, 반도체 AI |
+| [14. 디렉토리 구조](#14-디렉토리-구조-권장) | 폴더 배치 |
+| [15. 빠른 시작](#15-빠른-시작) | 3줄 요약 |
 
 ---
 
@@ -906,16 +907,124 @@ done
 
 ---
 
-## 13. 디렉토리 구조 (권장)
+## 13. 추가 모델 다운로드 스크립트
+
+> **Qwen3 외에 다른 모델도 다운로드할 수 있는 스크립트들입니다.**
+
+### 13.1 스크립트 목록
+
+| 스크립트 | 대상 모델 | 총 용량 | 라이선스 |
+|----------|-----------|---------|----------|
+| `download_all_qwen3.sh` | Qwen3 전체 (0.6B~235B) | ~53GB | Apache 2.0 |
+| `download_korean_llms.sh` | HyperCLOVA X, EXAONE, SOLAR, KORani, EEVE | ~120GB | 혼합 |
+| `download_general_llms.sh` | Qwen3.6 27B, DeepSeek-R1 32B, Coder 32B 등 | ~120-140GB | 혼합 |
+| `download_semiconductor_ai.sh` | RTLCoder, VeriGen, ChipNeMo + EDA 툴체인 | ~50GB | 오픈소스 |
+
+### 13.2 한국(국내) 개발 LLM 다운로드
+
+**스크립트:** `download_korean_llms.sh`
+
+```bash
+# 실행 방법
+cd ~/Desktop/qwen
+chmod +x download_korean_llms.sh
+./download_korean_llms.sh
+```
+
+**포함된 모델:**
+
+| 모델 | 크기 | 용도 | 라이선스 | 비고 |
+|------|------|------|----------|------|
+| HyperCLOVA X SEED Think 32B | ~19GB | 한국어 추론 최고 | 상업 무제한 ✅ | 24GB에 최적 |
+| HyperCLOVA X SEED Think 14B | ~9GB | 경량 추론 | 상업 무제한 ✅ | 여유로운 구동 |
+| HyperCLOVA X SEED Omni 8B | ~6GB | 다중모달 | 상업 무제한 ✅ | 텍스트+이미지+음성 |
+| EXAONE 3.5 32B | ~19GB | 한국어+추론 | ⚠️ 비상업용 | LG AI연구원 |
+| EXAONE 3.5 7.8B | ~5GB | 소형·빠른 배포 | ⚠️ 비상업용 | LG AI연구원 |
+| EXAONE 4.0 32B | ~19GB | 한국 전문자격시험 | ⚠️ 비상업용 | LG AI연구원 |
+| EXAONE 4.5 33B | ~20GB | 비전+언어 | ⚠️ 비상업용 | LG AI연구원 |
+| SOLAR 10.7B | ~7GB | 소형·빠른 배포 | Apache 2.0 ✅ | Upstage |
+| KORani 13B | ~8GB | 한국어 특화 | 오픈 웨이트 | 크래프톤 |
+| EEVE-Korean 10.8B | ~7GB | 한국어 특화 | Apache 2.0 | |
+
+> **⚠️ 주의:** EXAONE 시리즈는 **비상업용(NC)** 라이선스입니다. 개인/연구용으로만 사용하세요.
+
+### 13.3 범용(일반) LLM 다운로드
+
+**스크립트:** `download_general_llms.sh`
+
+```bash
+# 실행 방법
+cd ~/Desktop/qwen
+chmod +x download_general_llms.sh
+./download_general_llms.sh
+```
+
+**포함된 모델:**
+
+| 모델 | 크기 | 용도 | 라이선스 | 벤치마크 |
+|------|------|------|----------|----------|
+| Qwen3.6 27B | ~17-22GB | 24GB에서 최고 성능 | Apache 2.0 | SWE-bench 68.9% |
+| DeepSeek-R1 32B | ~20GB | 최고 추론/사고사슬 | MIT | AIME 72.6% |
+| Qwen 2.5 Coder 32B | ~20GB | 전문 코딩 | Apache 2.0 | HumanEval 92.7% |
+| Qwen3 8B | ~5GB | 가벼운 기본 모델 | Apache 2.0 | - |
+| Llama 3.1 8B | ~5GB | Meta의 검증된 기본 모델 | Llama 3.1 | - |
+| Gemma 3 27B | ~16GB | Google 소스 모델파일 | Gemma Terms | - |
+| DeepSeek-R1 14B | ~9GB | 경량 추론 | MIT | - |
+| Qwen 2.5 14B | ~9GB | 다용도 | Apache 2.0 | - |
+| Qwen3-Coder 30B | ~17-19GB | 에이전트 코딩 | Apache 2.0 | 256K 컨텍스트 |
+
+### 13.4 반도체 설계 전용 AI 다운로드
+
+**스크립트:** `download_semiconductor_ai.sh`
+
+```bash
+# 실행 방법
+cd ~/Desktop/qwen
+chmod +x download_semiconductor_ai.sh
+./download_semiconductor_ai.sh
+```
+
+**포함된 모델:**
+
+| 모델 | 크기 | 용도 | 라이선스 | 특징 |
+|------|------|------|----------|------|
+| RTLCoder-DeepSeek 6.7B | ~4GB | 자연어→Verilog | 완전 오픈소스 ✅ | GPT-3.5 능가·GPT-4급 |
+| RTLCoder-Mistral 6.7B | ~4GB | Mistral 기반 Verilog | 완전 오픈소스 ✅ | - |
+| VeriGen 7B | ~4GB | Verilog 코드 완성 | 오픈소스 ✅ | - |
+| VeriGen 16B | ~30GB | 더 정확한 Verilog | 오픈소스 ✅ | - |
+| ChipNeMo 13B | ~7GB | NVIDIA 반도체 설계 전용 | 오픈 (데이터 비공개) | - |
+
+**EDA 툴체인 포함:**
+- `iverilog`: Verilog 시뮬레이션
+- `verilator`: 고속/시스템Verilog 시뮬레이션
+- `gtkwave`: 파형 보기
+- `yosys`: 논리합성
+- `OpenLane`: RTL→GDSII 전체 자동흐름 (Docker)
+- `OSS CAD Suite`: 종합 툴키트
+
+### 13.5 라이선스 요약
+
+| 라이선스 | 모델 | 상업 사용 |
+|----------|------|-----------|
+| Apache 2.0 | Qwen3 전체, Qwen3.6 27B, Qwen 2.5 Coder 32B, SOLAR 10.7B | ✅ 가능 |
+| MIT | DeepSeek-R1 32B, DeepSeek-R1 14B | ✅ 가능 |
+| Llama 3.1 | Llama 3.1 8B | ✅ 가능 (조건부) |
+| Gemma Terms | Gemma 3 27B | ✅ 가능 (조건부) |
+| 상업 무제한 | HyperCLOVA X SEED 시리즈 | ✅ 가능 |
+| ⚠️ 비상업용 (NC) | EXAONE 시리즈 | ❌ 불가 (개인/연구용만) |
+| 완전 오픈소스 | RTLCoder, VeriGen | ✅ 가능 |
 
 ```
 /home/gotree94/Desktop/
 ├── README.md                          ← 이 파일
-├── download_all_qwen3.sh              ← 전체 다운로드 스크립트
+├── download_all_qwen3.sh              ← Qwen3 전체 다운로드 스크립트
+├── download_korean_llms.sh            ← 한국 LLM 다운로드 스크립트
+├── download_general_llms.sh           ← 범용 LLM 다운로드 스크립트
+├── download_semiconductor_ai.sh       ← 반도체 설계 AI 다운로드 스크립트
 ├── qwen3-env/                         ← Python 가상환경 (방법 2, 3용)
 ├── llama.cpp/                         ← llama.cpp 소스 (방법 4용)
 ├── qwen3-8b-gguf/                     ← 개별 GGUF (방법 4용)
-├── qwen3-all-models/                  ← 전체 모델 GGUF
+├── qwen3-all-models/                  ← Qwen3 전체 모델 GGUF
 │   ├── Qwen3-0.6B-Q8_0.gguf          (0.60GB)
 │   ├── Qwen3-1.7B-Q8_0.gguf          (1.71GB)
 │   ├── Qwen3-4B-Q4_K_M.gguf          (2.33GB)
@@ -923,12 +1032,40 @@ done
 │   ├── Qwen3-14B-Q4_K_M.gguf         (8.38GB)
 │   ├── Qwen3-32B-Q4_K_M.gguf         (18.40GB)
 │   └── Qwen3-30B-A3B-Q4_K_M.gguf     (17.28GB)
+├── korean-llms/                       ← 한국 LLM 모델
+│   ├── hyperclova-x-seed-think-32b/  (HyperCLOVA X SEED Think 32B)
+│   ├── hyperclova-x-seed-think-14b/  (HyperCLOVA X SEED Think 14B)
+│   ├── hyperclova-x-seed-omni-8b/    (HyperCLOVA X SEED Omni 8B)
+│   ├── exaone-3.5-32b/               (EXAONE 3.5 32B)
+│   ├── exaone-3.5-7.8b/              (EXAONE 3.5 7.8B)
+│   ├── exaone-4.0-32b/               (EXAONE 4.0 32B)
+│   ├── exaone-4.5-33b/               (EXAONE 4.5 33B)
+│   ├── solar-10.7b/                  (SOLAR 10.7B)
+│   ├── korani-13b/                   (KORani 13B)
+│   └── eeve-korean-10.8b/            (EEVE-Korean 10.8B)
+├── general-llms/                      ← 범용 LLM 모델
+│   ├── qwen3.6-27b/                  (Qwen3.6 27B)
+│   ├── deepseek-r1-32b/              (DeepSeek-R1 32B)
+│   ├── qwen2.5-coder-32b/            (Qwen 2.5 Coder 32B)
+│   ├── qwen3-8b/                     (Qwen3 8B)
+│   ├── llama3.1-8b/                  (Llama 3.1 8B)
+│   ├── gemma3-27b/                   (Gemma 3 27B)
+│   ├── deepseek-r1-14b/              (DeepSeek-R1 14B)
+│   ├── qwen2.5-14b/                  (Qwen 2.5 14B)
+│   └── qwen3-coder-30b/              (Qwen3-Coder 30B)
+├── semiconductor-ai/                  ← 반도체 설계 AI 모델
+│   ├── rtlcoder-deepseek-6.7b/       (RTLCoder-DeepSeek 6.7B)
+│   ├── rtlcoder-mistral-6.7b/        (RTLCoder-Mistral 6.7B)
+│   ├── verigen-7b/                    (VeriGen 7B)
+│   ├── verigen-16b/                   (VeriGen 16B)
+│   ├── chipnemo-13b/                  (ChipNeMo 13B)
+│   └── oss-cad-suite/                (오픈소스 EDA 툴체인)
 └── test_qwen3.py                      ← 테스트 스크립트 (방법 3용)
 ```
 
 ---
 
-## 14. 빠른 시작
+## 15. 빠른 시작
 
 ### 리눅스
 
@@ -945,6 +1082,22 @@ mkdir -p ~/Desktop/qwen3-8b-gguf
 aria2c -x 16 -s 16 -d ~/Desktop/qwen3-8b-gguf \
   -o "Qwen3-8B-Q4_K_M.gguf" \
   "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/main/Qwen3-8B-Q4_K_M.gguf"
+```
+
+```bash
+# 방법 C: 전체 모델 자동 다운로드 스크립트
+cd ~/Desktop/qwen
+chmod +x download_all_qwen3.sh
+./download_all_qwen3.sh
+```
+
+```bash
+# 방법 D: 추가 모델 다운로드 (한국 LLM, 범용 LLM, 반도체 AI)
+cd ~/Desktop/qwen
+chmod +x download_korean_llms.sh download_general_llms.sh download_semiconductor_ai.sh
+./download_korean_llms.sh      # 한국 LLM (HyperCLOVA X, EXAONE, SOLAR 등)
+./download_general_llms.sh     # 범용 LLM (Qwen3.6 27B, DeepSeek-R1 32B 등)
+./download_semiconductor_ai.sh # 반도체 설계 AI (RTLCoder, VeriGen 등)
 ```
 
 ### 윈도우
@@ -975,9 +1128,18 @@ vllm serve Qwen/Qwen3-8B
 
 ## 참고 자료
 
+### 공식 문서
 - [Qwen3 GitHub](https://github.com/QwenLM/Qwen3)
 - [Qwen3-8B HuggingFace](https://huggingface.co/Qwen/Qwen3-8B)
 - [Ollama 공식 문서](https://ollama.com)
 - [vLLM 공식 문서](https://docs.vllm.ai)
 - [llama.cpp](https://github.com/ggerganov/llama.cpp)
 - [Qwen 공식 문서](https://qwen.readthedocs.io)
+
+### 관련 가이드 문서
+| 문서 | 내용 |
+|------|------|
+| [로컬_LLM_가이드.md](로컬_LLM_가이드.md) | RTX 5090에서 사용 가능한 로컬 LLM 총망라 (Qwen3.6 27B, DeepSeek-R1 32B 등) |
+| [국내_LLM_가이드.md](국내_LLM_가이드.md) | 국내 개발 LLM 종합 가이드 (HyperCLOVA X, EXAONE, SOLAR, KORani 등) |
+| [M5_Ultra_로컬_LLM_가이드.md](M5_Ultra_로컬_LLM_가이드.md) | Apple Mac Studio M5 Ultra용 로컬 LLM 가이드 (256GB/512GB) |
+| [반도체_설계_AI_가이드.md](반도체_설계_AI_가이드.md) | 반도체 설계 전용 AI 가이드 (RTLCoder, VeriGen, ChipNeMo 등) |
